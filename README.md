@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/d6cdf0da-5543-4e2f-be78-472df8ff7620)![image](https://github.com/user-attachments/assets/d2a85d8b-9b7f-4368-8367-e2488207390d)# 安全存储系统
+# 安全存储系统
 
 ## 简介
 
