@@ -49,6 +49,9 @@
 | Mysql 8.0.27 |
 | redis |
 
+### 服务器端代码
+https://github.com/826148267/gdbigdata
+
 ### MySQL
 
 ```bash
