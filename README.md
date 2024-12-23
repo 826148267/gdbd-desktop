@@ -1,4 +1,4 @@
-# 安全存储系统
+![image](https://github.com/user-attachments/assets/d6cdf0da-5543-4e2f-be78-472df8ff7620)![image](https://github.com/user-attachments/assets/d2a85d8b-9b7f-4368-8367-e2488207390d)# 安全存储系统
 
 ## 简介
 
@@ -9,7 +9,12 @@
 - **安全存储**：所有文件均经过加密处理，确保数据在传输和存储过程中的安全性。
 - **密文去重**：系统支持文件去重，节省存储空间，提高存储效率。
 - **完整性审计**：通过密文完整性审计，确保文件在存储过程中的完整性，防止数据篡改。
+- **隐私信息检索**：通过不经意存取，确保用户的访问行为也能保证机密性，其安全性高于通常讨论的语义安全。
 - **用户友好界面**：提供直观易用的用户界面，方便用户进行文件上传、下载和管理。
+
+## 隐私信息检索
+基于以下文章中的不经意选择与更新协议（OSU protocol）进行设计。
+> [Enabling_Efficient_Secure_and_Privacy-Preserving_Mobile_Cloud_Storage.pdf](https://github.com/user-attachments/files/18230817/Enabling_Efficient_Secure_and_Privacy-Preserving_Mobile_Cloud_Storage.pdf)
 
 ## 密文去重
 
@@ -27,6 +32,130 @@
 2. **哈希校验**：系统在文件上传时，会生成文件的哈希值，并将其存储在数据库中。哈希值用于后续的完整性验证。
 3. **定期审计**：系统会定期对存储的文件进行完整性审计。通过重新计算文件的哈希值并与存储的哈希值进行比较，系统可以检测文件是否被篡改。
 4. **警报机制**：如果发现文件的哈希值与存储的哈希值不匹配，系统会触发警报，通知管理员进行进一步的调查和处理。
+
+## 系统整体架构图
+<p align="center">
+   <img width="416" alt="image" src="https://github.com/user-attachments/assets/21fd4a8d-c8ed-4d8b-827a-e12cc5ec65d1" />
+</p>
+客户端系统采用javafx进行构建。后端采用基于springboot框架的应用服务器。后端共有4个模块，分别为gdbigdate-ldcia-server-v2、gdbigdata-access-middle-server-v2和gdbigdata-access-real-server-v2、gdbigdata-user-auth
+
+## 服务器端部署说明
+| 居中对齐 |
+| :------: |
+| gdbigdate-ldcia-server-v2 |
+| gdbigdata-access-middle-server-v2 |
+| gdbigdata-access-real-server-v2 |
+| gdbigdata-user-auth |
+| Mysql 8.0.27 |
+| redis |
+
+### MySQL
+
+```bash
+docker run --name gdbd-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --mount type=bind,src=/home/docker/mysql/conf/my.cnf,dst=/etc/mysql/my.cnf --mount type=bind,src=/media/Yang/DATA/mysql/datadir,dst=/var/lib/mysql --restart=on-failure:3 -d mysql:8.0.27
+```
+
+### Redis
+
+```bash
+docker run -p 30060:30060 --name myredis -v/home/Yang/桌面/docker-redis/redis.conf:/etc/redis/redis.conf -d redis redis-server /etc/redis/redis.conf
+```
+
+### gdbigdata-user-auth
+
+```bash
+#基础镜像
+FROM openjdk:17-oracle
+#维护者，一般写姓名+邮箱
+MAINTAINER gzf<zeavango@gmail.com>
+#构建时设置环境变量
+#ENV
+#将jar包复制到镜像中，第一个变量为
+ADD gdbigdate-user-auth-1.0-SNAPSHOT.jar /gdbigdata/userauth/gdbigdate-user-auth-1.0-SNAPSHOT.jar
+#指定容器启动时要启动的命令
+#ENTRYPOINT ["mkdir","/gdbigdata/userauth/log"]
+#ENTRYPOINT ["cd","/gdbigdata/userauth"]
+#工作目录
+#WORKDIR /gdbigdata/accessrealserver
+#容器卷 主要是怕运维人员忘记-v了，有了它会匿名挂载起来，而不会乱写到容器的存储层中
+VOLUME ["/gdbigdata/userauth"]
+#就是我们平时写的 -p
+EXPOSE 10003
+#镜像运行时需要运行的命令
+CMD ["java","-jar","/gdbigdata/userauth/gdbigdate-user-auth-1.0-SNAPSHOT.jar","&"]
+```
+
+### gdbigdate-ldcia-server-v2
+
+```bash
+#基础镜像
+FROM openjdk:17-oracle
+#维护者，一般写姓名+邮箱
+MAINTAINER gzf<826148267@qq.com>
+#构建时设置环境变量
+#ENV
+#将jar包复制到镜像中，第一个变量为
+ADD target/ldcia-server-v2.jar /gdbigdata/ldcia/ldcia-server-v2.jar
+ADD src/main/resources/a.properties /gdbigdata/ldcia/a.properties
+#指定容器启动时要启动的命令
+#ENTRYPOINT ["mkdir","/gdbigdata/ldcia/log"]
+#ENTRYPOINT ["cd","/gdbigdata/ldcia"]
+#工作目录
+#WORKDIR /gdbigdata/ldcia
+#容器卷 主要是怕运维人员忘记-v了，有了它会匿名挂载起来，而不会乱写到容器的存储层中
+VOLUME ["/gdbigdata/ldcia"]
+#就是我们平时写的 -p
+EXPOSE 10004
+#镜像运行时需要运行的命令
+CMD ["java","-jar","/gdbigdata/ldcia/ldcia-server-v2.jar","&"]
+```
+
+### gdbigdata-access-real-server-v2
+```bash
+#基础镜像
+FROM openjdk:17-oracle
+#维护者，一般写姓名+邮箱
+MAINTAINER gzf<826148267@qq.com>
+#构建时设置环境变量
+#ENV
+#将jar包复制到镜像中，第一个变量为
+ADD target/gdbigdata-access-real-server-v2-1.0-SNAPSHOT.jar /gdbigdata/accessrealserver/gdbigdata-access-real-server-v2-1.0-SNAPSHOT.jar
+#指定容器启动时要启动的命令
+#ENTRYPOINT ["mkdir","/gdbigdata/accessrealserver/log"]
+#ENTRYPOINT ["cd","/gdbigdata/accessrealserver"]
+#工作目录
+#WORKDIR /gdbigdata/accessrealserver
+#容器卷 主要是怕运维人员忘记-v了，有了它会匿名挂载起来，而不会乱写到容器的存储层中
+VOLUME ["/gdbigdata/accessrealserver"]
+#就是我们平时写的 -p
+EXPOSE 10001
+#镜像运行时需要运行的命令
+CMD ["java","--add-opens=java.base/java.lang=ALL-UNNAMED","-jar","/gdbigdata/accessrealserver/gdbigdata-access-real-server-v2-1.0-SNAPSHOT.jar","&"]
+```
+
+### gdbigdata-access-middle-server-v2
+
+```bash
+#基础镜像
+FROM openjdk:17-oracle
+#维护者，一般写姓名+邮箱
+MAINTAINER gzf<826148267@qq.com>
+#构建时设置环境变量
+#ENV
+#将jar包复制到镜像中，第一个变量为
+ADD target/gdbigdata-access-middle-server-v2-1.0-SNAPSHOT.jar /gdbigdata/accessmiddleserver/gdbigdata-access-middle-server-v2-1.0-SNAPSHOT.jar
+#指定容器启动时要启动的命令
+#ENTRYPOINT ["mkdir","/gdbigdata/accessrealserver/log"]
+#ENTRYPOINT ["cd","/gdbigdata/accessrealserver"]
+#工作目录
+#WORKDIR /gdbigdata/accessrealserver
+#容器卷 主要是怕运维人员忘记-v了，有了它会匿名挂载起来，而不会乱写到容器的存储层中
+VOLUME ["/gdbigdata/accessmiddleserver"]
+#就是我们平时写的 -p
+EXPOSE 10002
+#镜像运行时需要运行的命令
+CMD ["java","-jar","/gdbigdata/accessmiddleserver/gdbigdata-access-middle-server-v2-1.0-SNAPSHOT.jar","&"]
+```
 
 ## 安装
 
@@ -51,6 +180,38 @@
 - 用户可以通过注册账户来使用系统。
 - 登录后，用户可以上传文件，系统会自动进行加密和去重处理。
 - 用户可以随时下载自己的文件，系统会确保文件的完整性。
+
+## 功能展示
+
+### 隐私信息检索
+<p align="center">
+   <img width="415" alt="image" src="https://github.com/user-attachments/assets/0670e127-a61d-43db-b59f-1fa6eb8cb3a9" />
+</p>
+<p align="center">
+   <img width="415" alt="image" src="https://github.com/user-attachments/assets/498a32fe-a71b-48ae-96df-4fe54dbe1849" />
+</p>
+<p align="center">
+   <img width="416" alt="image" src="https://github.com/user-attachments/assets/efc3518a-1c16-4ff0-a904-83d207dabb6f" />
+</p>
+<p align="center">
+   <img width="416" alt="image" src="https://github.com/user-attachments/assets/d19591b0-bc69-4106-9a35-e8c49ea0a28c" />
+</p>
+
+### 密文去重相关功能
+<p align="center">
+   <img width="412" alt="image" src="https://github.com/user-attachments/assets/95f4c0cc-b245-4e40-8a84-fe2e18520f67" />
+</p>
+<p align="center">
+   <img width="414" alt="image" src="https://github.com/user-attachments/assets/b87a3421-6c02-4c25-a250-78520c50a6d8" />
+</p>
+
+### 完整性审计相关功能
+<p align="center">
+   <img width="416" alt="image" src="https://github.com/user-attachments/assets/d6ab0f67-2851-4791-9099-8868ed0c5186" />
+</p>
+<p align="center">
+   <img width="416" alt="image" src="https://github.com/user-attachments/assets/1b9235b0-45fe-4272-8366-1db69dbdf242" />
+</p>
 
 ## 原理
 <p align="center">
