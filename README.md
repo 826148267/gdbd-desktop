@@ -40,7 +40,7 @@
 客户端系统采用javafx进行构建。后端采用基于springboot框架的应用服务器。后端共有4个模块，分别为gdbigdate-ldcia-server-v2、gdbigdata-access-middle-server-v2和gdbigdata-access-real-server-v2、gdbigdata-user-auth
 
 ## 服务器端部署说明
-| 居中对齐 |
+| 需要部署的服务器列表 |
 | :------: |
 | gdbigdate-ldcia-server-v2 |
 | gdbigdata-access-middle-server-v2 |
@@ -91,7 +91,7 @@ CMD ["java","-jar","/gdbigdata/userauth/gdbigdate-user-auth-1.0-SNAPSHOT.jar","&
 #基础镜像
 FROM openjdk:17-oracle
 #维护者，一般写姓名+邮箱
-MAINTAINER gzf<826148267@qq.com>
+MAINTAINER gzf<zeavango@gmail.com>
 #构建时设置环境变量
 #ENV
 #将jar包复制到镜像中，第一个变量为
@@ -115,7 +115,7 @@ CMD ["java","-jar","/gdbigdata/ldcia/ldcia-server-v2.jar","&"]
 #基础镜像
 FROM openjdk:17-oracle
 #维护者，一般写姓名+邮箱
-MAINTAINER gzf<826148267@qq.com>
+MAINTAINER gzf<zeavango@gmail.com>
 #构建时设置环境变量
 #ENV
 #将jar包复制到镜像中，第一个变量为
@@ -139,7 +139,7 @@ CMD ["java","--add-opens=java.base/java.lang=ALL-UNNAMED","-jar","/gdbigdata/acc
 #基础镜像
 FROM openjdk:17-oracle
 #维护者，一般写姓名+邮箱
-MAINTAINER gzf<826148267@qq.com>
+MAINTAINER gzf<zeavango@gmail.com>
 #构建时设置环境变量
 #ENV
 #将jar包复制到镜像中，第一个变量为
